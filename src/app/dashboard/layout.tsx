@@ -34,7 +34,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { href: '/dashboard/logs', label: 'Command Logs', icon: <ScrollText size={18} /> },
     { href: '/dashboard/settings', label: 'Settings', icon: <Settings size={18} /> },
-    { href: '/dashboard/simulate', label: 'Simulator', icon: <Zap size={18} /> },
   ];
 
   return (
