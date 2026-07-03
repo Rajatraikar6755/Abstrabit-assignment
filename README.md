@@ -1,15 +1,16 @@
 # CommandPulse — Discord Slash-Command Bot Dashboard
 
-CommandPulse is a production-grade, AI-powered Discord slash command bot integration and dashboard. It handles incoming Discord interactions securely, triages reports with Gemini AI, mirrors notifications to Slack/Discord webhooks, and provides a real-time dashboard with customizable rules for server admins.
+CommandPulse is a production-grade, AI-powered Discord slash command bot integration and dashboard. It handles incoming Discord interactions securely, triages reports with Groq AI (Llama 3.3 70b), mirrors notifications to Slack/Discord webhooks, and provides a real-time dashboard with customizable rules for server admins.
 
 ## 🚀 Key Features
 
 *   **Security First**: Ed25519 signature verification on every Discord payload with timestamp freshness validation.
 *   **Idempotency & Rate Limiting**: Redis deduplication ensures no double-processing; sliding-window rate limiting prevents abuse.
-*   **AI Triage**: Report submissions processed with Gemini 2.0 Flash for summary, tags, priority classification, and recommended next steps.
+*   **AI Triage**: Report submissions processed via Groq API (Llama 3.3 70b) for summary, tags, priority classification, and recommended next steps.
 *   **Rule Engine**: Configure match conditions (contains, regex, length constraints) and action effects (custom tags, custom priorities, auto-replies) inside the dashboard.
 *   **Reliable Delivery**: Episodic downstream failures (webhook errors, DB down) trigger automatic QStash queues with exponential retry/backoff.
 *   **Modern Dashboard**: Built using Next.js 15, TanStack Query (short-polling for serverless real-time feel), TailwindCSS, and framer-motion.
+*   **Firebase Authentication**: Native, secure client-side email/password and Google login integrations.
 *   **Secrets Safe**: No tokens/keys exposed to clients. Mirror webhook URLs are encrypted at rest with AES-256-GCM.
 
 ---
@@ -19,8 +20,8 @@ CommandPulse is a production-grade, AI-powered Discord slash command bot integra
 *   **Framework**: Next.js 15 (App Router, TS, TailwindCSS)
 *   **Database**: MongoDB Atlas + Mongoose
 *   **Queue & Deduplication**: Upstash Redis + Upstash QStash
-*   **AI Engine**: Google Gemini API
-*   **Authentication**: NextAuth.js (Credentials provider)
+*   **AI Engine**: Groq API
+*   **Authentication**: Firebase Authentication (Client SDK)
 
 ---
 
@@ -31,7 +32,8 @@ You will need accounts (all free tiers) with:
 *   [Discord Developer Portal](https://discord.com/developers/applications)
 *   [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
 *   [Upstash Console](https://console.upstash.com) (Redis & QStash)
-*   [Google AI Studio](https://aistudio.google.com) (Gemini API key)
+*   [Groq Console](https://console.groq.com) (Groq API key)
+*   [Firebase Console](https://console.firebase.google.com) (Authentication setup)
 
 ### 2. Configure Environment Variables
 Create a `.env` file in the root directory by copying `.env.example`:
@@ -43,18 +45,15 @@ Fill in the configuration fields:
 *   `MONGODB_URI`: Your MongoDB connection string.
 *   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`: From Upstash Redis.
 *   `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY`: From Upstash QStash tab.
-*   `NEXTAUTH_SECRET`: Random 32-character string.
 *   `ENCRYPTION_KEY`: A 64-character hex string (32 bytes) for encrypting webhooks at rest. You can generate one via `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
-*   `GEMINI_API_KEY`: Google AI Studio API key.
-*   `APP_URL`: Set to your local tunnel address (e.g. ngrok/Localtunnel address) when testing Discord webhooks locally, or your production URL. Defaults to `http://localhost:3000`.
+*   `GROQ_API_KEY`: Groq API Console key.
+*   `APP_URL`: Your Vercel domain or localtunnel address (for local testing).
+*   **Firebase Keys**: Prefixed with `NEXT_PUBLIC_FIREBASE_` (API Key, Auth Domain, Project ID, Storage Bucket, Messaging Sender ID, App ID).
 
-### 3. Run Command Registration & Seeding
+### 3. Run Command Registration
 ```bash
 # Register slash commands (/report, /status) globally with Discord
 npx tsx scripts/register-commands.ts
-
-# Seed the admin credentials and default command configs
-npx tsx scripts/seed-admin.ts
 ```
 
 ### 4. Running the Development Server
@@ -81,12 +80,5 @@ Update your Discord application's **Interactions Endpoint URL** to:
 3.  Deploy the project.
 4.  Copy your Vercel deployment URL (e.g. `https://your-app.vercel.app`).
 5.  In the Discord Developer Portal, paste `https://your-app.vercel.app/api/discord/interactions` into the **Interactions Endpoint URL** field and save.
-6.  Set the `APP_URL` environment variable in your Vercel settings to your custom domain or Vercel URL, and redeploy or restart to apply.
-
----
-
-## 🧪 Admin Dashboard Account
-
-To log in, use the throwaway admin account seeded with `seed-admin.ts`:
-*   **Email**: `admin@example.com`
-*   **Password**: `admin123`
+6.  Set the `APP_URL` environment variable in your Vercel settings to your Vercel URL, and redeploy or restart to apply.
+7.  In the **Firebase Console**, go to **Authentication** -> **Settings** -> **Authorized domains** -> click **Add Domain** -> paste your Vercel domain name, and click save.
