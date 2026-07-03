@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
 
     const startTime = Date.now();
     let triageResult = null;
-    let ruleResults = { matched: false, matchedRules: [], appliedActions: [], tags: [], priority: 'normal', autoReply: '' };
 
     // Load guild + command config for rule engine
     const [guildConfig, commandConfig] = await Promise.all([
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
     ]);
 
     // Run rule engine
-    ruleResults = evaluateRules(text, commandConfig);
+    const ruleResults = evaluateRules(text, commandConfig);
 
     // Run AI triage for /report
     if (command === 'report' && text && guildConfig?.aiEnabled !== false) {
