@@ -47,7 +47,8 @@ export async function POST(req: NextRequest) {
       const parsed = JSON.parse(rawBody);
       const validated = discordInteractionSchema.parse(parsed);
       body = validated as unknown as DiscordInteraction;
-    } catch {
+    } catch (err) {
+      console.error('ZOD VALIDATION FAILED:', err);
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
