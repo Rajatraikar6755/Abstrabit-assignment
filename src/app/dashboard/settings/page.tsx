@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Shield, Bot, Save, AlertCircle, CheckCircle2, Plus, Trash2 } from 'lucide-react';
+import { Settings, Shield, Bot, Save, AlertCircle, CheckCircle2, Plus, Trash2, HelpCircle, Info } from 'lucide-react';
 
 interface GuildConfig {
   discordGuildId: string;
@@ -47,6 +47,11 @@ export default function SettingsPage() {
   const [mirrorWebhookUrl, setMirrorWebhookUrl] = useState('');
   const [mirrorType, setMirrorType] = useState<'slack' | 'discord'>('discord');
   const [aiEnabled, setAiEnabled] = useState(true);
+
+  // Helper popup guide states
+  const [showGuildHelp, setShowGuildHelp] = useState(false);
+  const [showChannelHelp, setShowChannelHelp] = useState(false);
+  const [showWebhookHelp, setShowWebhookHelp] = useState(false);
 
   // Rules Editor Form State
   const [selectedCommandId, setSelectedCommandId] = useState<string>('');
@@ -266,7 +271,17 @@ export default function SettingsPage() {
               <h3 style={{ fontSize: 16, fontWeight: 600, borderBottom: '1px solid var(--border-color)', paddingBottom: 10 }}>Guild Association</h3>
               
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>Discord Guild ID (Connected Server)</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>Discord Guild ID (Connected Server)</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowGuildHelp(!showGuildHelp)}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}
+                    className="hover-bright"
+                  >
+                    <HelpCircle size={14} /> How to find?
+                  </button>
+                </div>
                 <input
                   className="input-field"
                   placeholder="e.g., 123456789012345678"
@@ -274,16 +289,77 @@ export default function SettingsPage() {
                   onChange={e => setGuildId(e.target.value)}
                   required
                 />
+                {showGuildHelp && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px dashed var(--border-color)',
+                      borderRadius: 8,
+                      padding: 16,
+                      marginTop: 10,
+                      fontSize: 13,
+                      color: 'var(--text-secondary)',
+                      lineHeight: '1.6'
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Info size={14} color="var(--accent-primary)" /> How to find Discord Server (Guild) ID:
+                    </div>
+                    <ol style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6, margin: 0 }}>
+                      <li>Open Discord and go to your <strong>User Settings</strong> (gear icon next to username).</li>
+                      <li>In the left sidebar, click <strong>Advanced</strong> (under App Settings).</li>
+                      <li>Toggle on <strong>Developer Mode</strong>.</li>
+                      <li>Go back to Discord, right-click the server icon/name in the list, and select <strong>Copy Server ID</strong>.</li>
+                    </ol>
+                  </motion.div>
+                )}
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>Bot Posts Channel ID (e.g., Reports logging)</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>Bot Posts Channel ID (e.g., Reports logging)</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowChannelHelp(!showChannelHelp)}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}
+                    className="hover-bright"
+                  >
+                    <HelpCircle size={14} /> How to find?
+                  </button>
+                </div>
                 <input
                   className="input-field"
                   placeholder="e.g., 987654321098765432"
                   value={channelId}
                   onChange={e => setChannelId(e.target.value)}
                 />
+                {showChannelHelp && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px dashed var(--border-color)',
+                      borderRadius: 8,
+                      padding: 16,
+                      marginTop: 10,
+                      fontSize: 13,
+                      color: 'var(--text-secondary)',
+                      lineHeight: '1.6'
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Info size={14} color="var(--accent-primary)" /> How to find Discord Channel ID:
+                    </div>
+                    <ol style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6, margin: 0 }}>
+                      <li>Ensure Discord <strong>Developer Mode</strong> is turned on (Settings &gt; Advanced).</li>
+                      <li>Navigate to your Discord server channel list.</li>
+                      <li>Right-click the text channel where you want the bot to post reports (e.g., `#alerts`), and click <strong>Copy Channel ID</strong> at the bottom of the list.</li>
+                    </ol>
+                  </motion.div>
+                )}
               </div>
 
               <h3 style={{ fontSize: 16, fontWeight: 600, borderBottom: '1px solid var(--border-color)', paddingBottom: 10, marginTop: 10 }}>Mirror Notifications (Slack / Discord webhook)</h3>
@@ -301,9 +377,19 @@ export default function SettingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                    Webhook URL {guildData?.configs?.[0]?.hasMirrorWebhook && <span style={{ color: 'var(--success)', fontSize: 12 }}>(Already Configured)</span>}
-                  </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                      Webhook URL {guildData?.configs?.[0]?.hasMirrorWebhook && <span style={{ color: 'var(--success)', fontSize: 12 }}>(Already Configured)</span>}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowWebhookHelp(!showWebhookHelp)}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}
+                      className="hover-bright"
+                    >
+                      <HelpCircle size={14} /> How to find?
+                    </button>
+                  </div>
                   <input
                     type="password"
                     className="input-field"
@@ -313,6 +399,44 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+
+              {showWebhookHelp && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px dashed var(--border-color)',
+                    borderRadius: 8,
+                    padding: 16,
+                    fontSize: 13,
+                    color: 'var(--text-secondary)',
+                    lineHeight: '1.6'
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Info size={14} color="var(--accent-primary)" /> How to create and get a Webhook URL:
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, fontSize: 12 }}>For Discord:</div>
+                      <ol style={{ paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4, margin: 0 }}>
+                        <li>Go to your Discord Server settings {"→"} <strong>Integrations</strong>.</li>
+                        <li>Click <strong>Webhooks</strong> {"→"} <strong>New Webhook</strong>.</li>
+                        <li>Choose a target channel and click <strong>Copy Webhook URL</strong>.</li>
+                      </ol>
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, fontSize: 12 }}>For Slack:</div>
+                      <ol style={{ paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4, margin: 0 }}>
+                        <li>Go to your Slack workspace and click <strong>Apps</strong> {"→"} Add App.</li>
+                        <li>Search for <strong>Incoming Webhooks</strong> and install it.</li>
+                        <li>Pick a channel, add the integration, and copy the generated Webhook URL.</li>
+                      </ol>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
               <h3 style={{ fontSize: 16, fontWeight: 600, borderBottom: '1px solid var(--border-color)', paddingBottom: 10, marginTop: 10 }}>AI features</h3>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

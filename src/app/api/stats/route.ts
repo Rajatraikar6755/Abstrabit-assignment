@@ -21,6 +21,7 @@ export async function GET() {
     processingToday,
     commandBreakdown,
     recentFailures,
+    recentActivity,
     hourlyData,
   ] = await Promise.all([
     Interaction.countDocuments({}),
@@ -38,6 +39,11 @@ export async function GET() {
       .sort({ createdAt: -1 })
       .limit(5)
       .select('command username createdAt attempts')
+      .lean(),
+    Interaction.find({})
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .select('command username status createdAt priority tags')
       .lean(),
     Interaction.aggregate([
       { $match: { createdAt: { $gte: todayStart } } },
@@ -64,6 +70,7 @@ export async function GET() {
     successRate,
     commandBreakdown: commandBreakdown.map(c => ({ command: c._id, count: c.count })),
     recentFailures,
+    recentActivity,
     hourlyData: hourlyData.map(h => ({
       hour: h._id,
       total: h.total,
