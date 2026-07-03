@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Discord interaction payload validator (loosely typed — Discord adds fields we don't always need)
+// Discord interaction payload validator (extremely loose and robust to prevent validation failures on new/changed Discord API fields)
 export const discordInteractionSchema = z.object({
   id: z.string(),
   application_id: z.string(),
@@ -18,35 +18,14 @@ export const discordInteractionSchema = z.object({
     custom_id: z.string().optional(),
     component_type: z.number().optional(),
     components: z.array(z.any()).optional(),
-  }).optional(),
+  }).catchall(z.any()).optional(),
   guild_id: z.string().optional(),
   channel_id: z.string().optional(),
-  member: z.object({
-    user: z.object({
-      id: z.string(),
-      username: z.string(),
-      discriminator: z.string().optional(),
-      avatar: z.string().nullable().optional(),
-      global_name: z.string().nullable().optional(),
-    }),
-    nick: z.string().nullable().optional(),
-    roles: z.array(z.string()).optional(),
-    joined_at: z.string().optional(),
-  }).optional(),
-  user: z.object({
-    id: z.string(),
-    username: z.string(),
-    discriminator: z.string().optional(),
-    avatar: z.string().nullable().optional(),
-    global_name: z.string().nullable().optional(),
-  }).optional(),
+  member: z.any().optional(),
+  user: z.any().optional(),
   token: z.string(),
   version: z.number(),
-  message: z.object({
-    id: z.string(),
-    content: z.string().optional(),
-    embeds: z.array(z.any()).optional(),
-  }).optional(),
+  message: z.any().optional(),
 }).passthrough();
 
 // Guild configuration update schema
