@@ -43,7 +43,7 @@ export async function GET() {
     Interaction.find({})
       .sort({ createdAt: -1 })
       .limit(6)
-      .select('command username status createdAt priority tags')
+      .select('command username status createdAt aiPriority aiTags ruleResults')
       .lean(),
     Interaction.aggregate([
       { $match: { createdAt: { $gte: todayStart } } },
@@ -70,7 +70,20 @@ export async function GET() {
     successRate,
     commandBreakdown: commandBreakdown.map(c => ({ command: c._id, count: c.count })),
     recentFailures,
-    recentActivity,
+    recentActivity: recentActivity.map(act => {
+      const actObj = act as any;
+      const rulePriority = actObj.ruleResults?.priority;
+      const ruleTags = actObj.ruleResults?.tags || [];
+      return {
+        _id: actObj._id,
+        command: actObj.command,
+        username: actObj.username,
+        status: actObj.status,
+        createdAt: actObj.createdAt,
+        priority: actObj.aiPriority || rulePriority || '',
+        tags: [...(actObj.aiTags || []), ...ruleTags].filter((v, i, a) => a.indexOf(v) === i),
+      };
+    }),
     hourlyData: hourlyData.map(h => ({
       hour: h._id,
       total: h.total,

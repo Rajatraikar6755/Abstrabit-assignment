@@ -216,10 +216,12 @@ export default function DashboardPage() {
                   if (act.status === 'failed') statusBadge = <span className="badge badge-danger">failed</span>;
                   if (act.status === 'deferred') statusBadge = <span className="badge badge-warning">deferred</span>;
 
-                  let priorityBadge = <span className="badge badge-muted">normal</span>;
-                  if (act.priority === 'HIGH') priorityBadge = <span className="badge badge-danger">high</span>;
-                  if (act.priority === 'MEDIUM') priorityBadge = <span className="badge badge-warning">medium</span>;
-                  if (act.priority === 'LOW') priorityBadge = <span className="badge badge-info">low</span>;
+                  let priorityBadge = <span className="badge badge-muted">—</span>;
+                  if (act.priority === 'critical') priorityBadge = <span className="badge badge-danger">critical</span>;
+                  else if (act.priority === 'high') priorityBadge = <span className="badge badge-warning">high</span>;
+                  else if (act.priority === 'medium') priorityBadge = <span className="badge badge-info">medium</span>;
+                  else if (act.priority === 'low') priorityBadge = <span className="badge badge-success">low</span>;
+                  else if (act.priority === 'normal') priorityBadge = <span className="badge badge-muted">normal</span>;
 
                   return (
                     <tr key={act._id}>
