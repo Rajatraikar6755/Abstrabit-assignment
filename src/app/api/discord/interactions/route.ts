@@ -323,11 +323,50 @@ async function handleComponentInteraction(body: DiscordInteraction) {
     
     // Extract original embeds
     const originalEmbeds = body.message?.embeds || [];
-    let updatedEmbeds = [...originalEmbeds];
+    let updatedEmbeds: any[] = [];
     
-    if (updatedEmbeds.length > 0) {
-      const embed = { ...updatedEmbeds[0] };
-      embed.fields = embed.fields ? [...embed.fields] : [];
+    if (originalEmbeds.length > 0) {
+      const orig = originalEmbeds[0];
+      const embed: any = {
+        title: orig.title,
+        description: orig.description,
+        url: (orig as any).url,
+        timestamp: orig.timestamp,
+        color: orig.color,
+      };
+
+      if (orig.fields) {
+        embed.fields = orig.fields.map(f => ({
+          name: f.name,
+          value: f.value,
+          inline: f.inline,
+        }));
+      } else {
+        embed.fields = [];
+      }
+
+      if (orig.footer) {
+        embed.footer = {
+          text: orig.footer.text,
+          icon_url: orig.footer.icon_url,
+        };
+      }
+
+      if ((orig as any).image) {
+        embed.image = { url: (orig as any).image.url };
+      }
+
+      if (orig.thumbnail) {
+        embed.thumbnail = { url: orig.thumbnail.url };
+      }
+
+      if (orig.author) {
+        embed.author = {
+          name: orig.author.name,
+          icon_url: orig.author.icon_url,
+          url: (orig as any).author.url,
+        };
+      }
       
       // Update color and add status field
       if (isAck) {
@@ -345,7 +384,7 @@ async function handleComponentInteraction(body: DiscordInteraction) {
           inline: false
         });
       }
-      updatedEmbeds[0] = embed;
+      updatedEmbeds.push(embed);
     }
     
     const disabledAction = isAck ? 'ack' : 'escalate';
