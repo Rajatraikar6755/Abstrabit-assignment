@@ -318,8 +318,71 @@ async function handleComponentInteraction(body: DiscordInteraction) {
   });
 
   if (customId.startsWith('ack_') || customId.startsWith('escalate_')) {
+    const isAck = customId.startsWith('ack_');
+    const targetId = customId.substring(customId.indexOf('_') + 1);
+    
+    // Extract original embeds
+    const originalEmbeds = body.message?.embeds || [];
+    let updatedEmbeds = [...originalEmbeds];
+    
+    if (updatedEmbeds.length > 0) {
+      const embed = { ...updatedEmbeds[0] };
+      embed.fields = embed.fields ? [...embed.fields] : [];
+      
+      // Update color and add status field
+      if (isAck) {
+        embed.color = 0x10B981; // green
+        embed.fields.push({
+          name: '⚙️ Status Update',
+          value: `✅ **Acknowledged** by @${username}`,
+          inline: false
+        });
+      } else {
+        embed.color = 0xEF4444; // red
+        embed.fields.push({
+          name: '⚙️ Status Update',
+          value: `🚨 **Escalated** by @${username}`,
+          inline: false
+        });
+      }
+      updatedEmbeds[0] = embed;
+    }
+    
+    const disabledAction = isAck ? 'ack' : 'escalate';
+    const updatedComponents = [
+      {
+        type: 1, // ACTION_ROW
+        components: [
+          {
+            type: 2, // BUTTON
+            style: 3, // SUCCESS
+            label: disabledAction === 'ack' ? '✅ Acknowledged' : '✅ Acknowledge',
+            custom_id: `ack_${targetId}`,
+            disabled: disabledAction === 'ack',
+          },
+          {
+            type: 2,
+            style: 4, // DANGER
+            label: disabledAction === 'escalate' ? '🚨 Escalated' : '🔴 Escalate',
+            custom_id: `escalate_${targetId}`,
+            disabled: disabledAction === 'escalate',
+          },
+          {
+            type: 2,
+            style: 2, // SECONDARY
+            label: '📝 Add Note',
+            custom_id: `note_${targetId}`,
+          },
+        ],
+      },
+    ];
+
     return NextResponse.json({
-      type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+      type: InteractionResponseType.UPDATE_MESSAGE,
+      data: {
+        embeds: updatedEmbeds,
+        components: updatedComponents,
+      }
     });
   }
 
