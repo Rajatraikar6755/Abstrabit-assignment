@@ -125,7 +125,15 @@ export default function DashboardPage() {
           
           <div style={{ width: '100%', height: 160 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }} barSize={12}>
+              <BarChart data={chartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }} barSize={10}>
+                <defs>
+                  <filter id="glow-success" x="-30%" y="-30%" width="160%" height="160%">
+                    <feDropShadow dx={0} dy={0} stdDeviation={4} floodColor="#00FFAD" floodOpacity={0.6} />
+                  </filter>
+                  <filter id="glow-failed" x="-30%" y="-30%" width="160%" height="160%">
+                    <feDropShadow dx={0} dy={0} stdDeviation={4} floodColor="#FF1A1A" floodOpacity={0.6} />
+                  </filter>
+                </defs>
                 <XAxis 
                   dataKey="hour" 
                   tickLine={false} 
@@ -142,7 +150,7 @@ export default function DashboardPage() {
                   tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} 
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const successCount = payload[0].value;
@@ -151,11 +159,11 @@ export default function DashboardPage() {
                         <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '10px 14px', borderRadius: 8, fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', color: 'var(--text-primary)' }}>
                           <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--accent-primary)' }}>{payload[0].payload.hour}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, background: '#10B981', borderRadius: '50%' }} />
+                            <span style={{ display: 'inline-block', width: 8, height: 8, background: '#00FFAD', borderRadius: '50%', boxShadow: '0 0 6px #00FFAD' }} />
                             <span>Success: <strong>{successCount}</strong></span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, background: '#EF4444', borderRadius: '50%' }} />
+                            <span style={{ display: 'inline-block', width: 8, height: 8, background: '#FF1A1A', borderRadius: '50%', boxShadow: '0 0 6px #FF1A1A' }} />
                             <span>Failed: <strong>{failedCount}</strong></span>
                           </div>
                         </div>
@@ -164,15 +172,15 @@ export default function DashboardPage() {
                     return null;
                   }}
                 />
-                <Bar dataKey="success" stackId="a" fill="#10B981" radius={[0, 0, 2, 2]} />
-                <Bar dataKey="failed" stackId="a" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="success" stackId="a" fill="#00FFAD" radius={[5, 5, 5, 5]} filter="url(#glow-success)" />
+                <Bar dataKey="failed" stackId="a" fill="#FF1A1A" radius={[5, 5, 5, 5]} filter="url(#glow-failed)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           <div style={{ display: 'flex', gap: 16, marginTop: 14, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ display: 'inline-block', width: 10, height: 10, background: '#10B981', borderRadius: 3 }} />Successful commands</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ display: 'inline-block', width: 10, height: 10, background: '#EF4444', borderRadius: 3 }} />Failed commands</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ display: 'inline-block', width: 10, height: 10, background: '#00FFAD', borderRadius: 3, boxShadow: '0 0 6px #00FFAD' }} />Successful commands</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ display: 'inline-block', width: 10, height: 10, background: '#FF1A1A', borderRadius: 3, boxShadow: '0 0 6px #FF1A1A' }} />Failed commands</span>
           </div>
         </motion.div>
 
