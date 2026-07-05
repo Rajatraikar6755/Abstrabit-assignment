@@ -122,6 +122,12 @@ export async function POST(req: NextRequest) {
         return handleStatusCommand(interaction);
       } else if (commandName === 'report') {
         return handleReportCommand(interaction, options);
+      } else if (commandName === 'suggest') {
+        return handleSuggestCommand(interaction, options);
+      } else if (commandName === 'check-report') {
+        return handleCheckReportCommand(interaction, options);
+      } else if (commandName === 'help') {
+        return handleHelpCommand(interaction);
       } else {
         return NextResponse.json({
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -439,4 +445,185 @@ async function handleModalSubmit(body: DiscordInteraction) {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: { content: 'Form submitted.', flags: 64 },
   });
+}
+
+/**
+ * /suggest <text> — defer and process async via QStash
+ */
+async function handleSuggestCommand(
+  interaction: InstanceType<typeof Interaction>,
+  options: Record<string, unknown>
+) {
+  try {
+    interaction.status = 'deferred';
+    await interaction.save();
+
+    // Publish to QStash for async processing
+    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const messageId = await publishToQueue(
+      `${appUrl}/api/discord/process`,
+      { interactionId: interaction.discordInteractionId },
+      { retries: 3 }
+    );
+
+    interaction.qstashMessageId = messageId;
+    await interaction.save();
+  } catch (error) {
+    console.error('Failed to queue suggestion:', error);
+  }
+
+  return NextResponse.json({
+    type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+  });
+}
+
+/**
+ * /check-report <report_id> — retrieve report status from MongoDB instantly
+ */
+async function handleCheckReportCommand(
+  interaction: InstanceType<typeof Interaction>,
+  options: Record<string, unknown>
+) {
+  try {
+    const reportId = String(options.report_id || '').trim();
+    if (!reportId) {
+      return NextResponse.json({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: { content: '❌ Please provide a valid report ID.', flags: 64 },
+      });
+    }
+
+    // Find the report in MongoDB
+    const targetReport = await Interaction.findOne({
+      $or: [
+        { discordInteractionId: reportId },
+        { qstashMessageId: reportId }
+      ]
+    });
+
+    if (!targetReport) {
+      interaction.status = 'success';
+      await interaction.save();
+
+      return NextResponse.json({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: { content: `❌ Report or Suggestion with ID \`${reportId}\` was not found. Please double-check the ID.`, flags: 64 },
+      });
+    }
+
+    // Determine status color
+    let color = 0x06B6D4; // cyan default
+    if (targetReport.status === 'success') color = 0x10B981; // green
+    if (targetReport.status === 'failed') color = 0xEF4444; // red
+    if (targetReport.status === 'processing' || targetReport.status === 'deferred') color = 0xF59E0B; // amber
+
+    const fields = [
+      { name: '📋 Command Type', value: `\`/${targetReport.command}\``, inline: true },
+      { name: '👤 Submitted By', value: `@${targetReport.username}`, inline: true },
+      { name: '⏳ Current Status', value: `**${targetReport.status.toUpperCase()}**`, inline: true },
+    ];
+
+    const textContent = targetReport.commandOptions && (targetReport.commandOptions as any).text
+      ? String((targetReport.commandOptions as any).text)
+      : 'No text content';
+
+    fields.push({ name: '📝 Original Content', value: textContent.slice(0, 1024), inline: false });
+
+    if (targetReport.aiPriority) {
+      fields.push({ name: '🚨 Priority Level', value: `\`${targetReport.aiPriority.toUpperCase()}\``, inline: true });
+    }
+    if (targetReport.aiSummary) {
+      fields.push({ name: '🤖 AI Summary', value: targetReport.aiSummary, inline: false });
+    }
+    
+    const ruleRes = targetReport.ruleResults as any;
+    if (ruleRes && ruleRes.tags?.length > 0) {
+      fields.push({
+        name: '📌 Applied Tags',
+        value: ruleRes.tags.map((t: string) => `\`${t}\``).join(' '),
+        inline: true
+      });
+    }
+
+    // Update the checking interaction as success
+    interaction.status = 'success';
+    await interaction.save();
+
+    return NextResponse.json({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        embeds: [{
+          title: `🔍 Report Status Lookup`,
+          description: `Details for record ID: \`${reportId}\``,
+          color,
+          fields,
+          timestamp: targetReport.createdAt ? new Date(targetReport.createdAt).toISOString() : new Date().toISOString(),
+          footer: { text: 'CommandPulse Dashboard Integration' },
+        }],
+      },
+    });
+  } catch (error) {
+    console.error('Check report error:', error);
+    interaction.status = 'failed';
+    await interaction.save();
+
+    return NextResponse.json({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: { content: '❌ An error occurred while checking report status.', flags: 64 },
+    });
+  }
+}
+
+/**
+ * /help — display stylized help embed
+ */
+async function handleHelpCommand(interaction: InstanceType<typeof Interaction>) {
+  try {
+    interaction.status = 'success';
+    await interaction.save();
+
+    return NextResponse.json({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        embeds: [{
+          title: '📖 CommandPulse Help & Commands',
+          description: 'Welcome to the CommandPulse bot guide! Below is a list of all active slash commands and how to use them.',
+          color: 0x06B6D4, // cyan
+          fields: [
+            {
+              name: '📋 /report `[text]`',
+              value: 'Submit a report for automated AI triage, categorization, and routing. Leave the `text` option blank to open a detailed modal form.'
+            },
+            {
+              name: '💡 /suggest `<text>`',
+              value: 'Submit feedback, server ideas, or general suggestions. These will be logged and routed to our suggestions channel.'
+            },
+            {
+              name: '🔍 /check-report `<report_id>`',
+              value: 'Query the live status of any previously submitted report or suggestion using its unique ID.'
+            },
+            {
+              name: '📊 /status',
+              value: 'Check bot diagnostic status, latency, uptime, and recent command activity logs.'
+            },
+            {
+              name: '📖 /help',
+              value: 'Display this command guide embed.'
+            }
+          ],
+          footer: { text: 'CommandPulse · Intelligent Server Triage' },
+          timestamp: new Date().toISOString()
+        }]
+      }
+    });
+  } catch (error) {
+    console.error('Help command error:', error);
+    interaction.status = 'failed';
+    await interaction.save();
+
+    return NextResponse.json({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: { content: '❌ Failed to load the help embed.', flags: 64 },
+    });
+  }
 }

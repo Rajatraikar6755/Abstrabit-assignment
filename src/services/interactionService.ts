@@ -48,13 +48,13 @@ export async function processInteraction(interactionId: string): Promise<void> {
     );
     interaction.ruleResults = ruleResults;
 
-    // AI triage for /report command
+    // AI triage for /report and /suggest commands
     let triageResult = null;
-    if (interaction.command === 'report' && guildConfig?.aiEnabled !== false) {
+    if ((interaction.command === 'report' || interaction.command === 'suggest') && guildConfig?.aiEnabled !== false) {
       try {
-        // Fetch recent reports for context (lightweight RAG)
+        // Fetch recent reports/suggestions for context (lightweight RAG)
         const recentReports = await Interaction.find({
-          command: 'report',
+          command: interaction.command,
           guildId: interaction.guildId,
           status: 'success',
           aiSummary: { $ne: '' },
@@ -159,8 +159,9 @@ function buildResponseEmbeds(
   ruleResults: ReturnType<typeof evaluateRules>,
   triageResult: { summary: string; tags: string[]; priority: string; suggestedAction: string } | null
 ): DiscordEmbed[] {
+  const isSuggestion = interaction.command === 'suggest';
   const embed: DiscordEmbed = {
-    title: `📋 Report Received`,
+    title: isSuggestion ? `💡 Suggestion Received` : `📋 Report Received`,
     color: getPriorityColor(triageResult?.priority || ruleResults.priority),
     fields: [
       { name: 'Content', value: getInputText(interaction).slice(0, 1024) || 'No content' },

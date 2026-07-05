@@ -31,8 +31,39 @@ const commands = [
     ],
   },
   {
+    name: 'suggest',
+    description: 'Submit a feedback suggestion or idea for the server',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'text',
+        description: 'The suggestion details',
+        type: 3, // STRING
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'check-report',
+    description: 'Check the status of a previously submitted report',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'report_id',
+        description: 'The ID of the report to check',
+        type: 3, // STRING
+        required: true,
+      },
+    ],
+  },
+  {
     name: 'status',
     description: 'View bot status and recent command activity',
+    type: 1,
+  },
+  {
+    name: 'help',
+    description: 'Get help and view all available commands',
     type: 1,
   },
 ];
