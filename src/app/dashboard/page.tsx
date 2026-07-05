@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Activity, CheckCircle2, XCircle, Clock, TrendingUp, BarChart3, Users, Zap, ShieldAlert } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 interface Stats {
   totalAll: number;
@@ -61,14 +62,21 @@ export default function DashboardPage() {
     );
   }
 
+  const chartData = Array.from({ length: 24 }, (_, hour) => {
+    const data = stats.hourlyData.find(h => h.hour === hour);
+    return {
+      hour: `${hour}:00`,
+      success: data?.success || 0,
+      failed: data?.failed || 0,
+    };
+  });
+
   const statCards = [
     { label: 'Total Today', value: stats.totalToday, icon: <Activity size={20} />, color: 'var(--accent-primary)', bg: 'linear-gradient(135deg, rgba(88,101,242,0.1) 0%, transparent 100%)' },
     { label: 'Successful', value: stats.successToday, icon: <CheckCircle2 size={20} />, color: 'var(--success)', bg: 'linear-gradient(135deg, rgba(67,181,129,0.1) 0%, transparent 100%)' },
     { label: 'Failed', value: stats.failedToday, icon: <XCircle size={20} />, color: 'var(--danger)', bg: 'linear-gradient(135deg, rgba(240,71,71,0.1) 0%, transparent 100%)' },
     { label: 'Processing', value: stats.processingToday, icon: <Clock size={20} />, color: 'var(--warning)', bg: 'linear-gradient(135deg, rgba(250,166,26,0.1) 0%, transparent 100%)' },
   ];
-
-  const maxHourly = Math.max(...(stats.hourlyData.map(h => h.total) || [1]), 1);
 
   return (
     <div>
@@ -114,30 +122,57 @@ export default function DashboardPage() {
             <TrendingUp size={18} color="var(--accent-primary)" />
             <h3 style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>Today&apos;s Activity Curve</h3>
           </div>
-          {/* Simple bar chart */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 130 }}>
-            {Array.from({ length: 24 }, (_, hour) => {
-              const data = stats.hourlyData.find(h => h.hour === hour);
-              const height = data ? (data.total / maxHourly) * 100 : 0;
-              const failed = data?.failed || 0;
-              return (
-                <div key={hour} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: 110 }}>
-                    {failed > 0 && (
-                      <div style={{ width: '100%', height: `${(failed / maxHourly) * 100}%`, background: 'var(--danger)', borderRadius: '3px 3px 0 0', minHeight: failed > 0 ? 3 : 0 }} />
-                    )}
-                    <div style={{ width: '100%', height: `${height}%`, background: 'var(--accent-primary)', borderRadius: failed > 0 ? '0' : '3px 3px 0 0', minHeight: height > 0 ? 3 : 0, opacity: 0.8 }} />
-                  </div>
-                  {hour % 4 === 0 && (
-                    <span style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 600 }}>{hour}h</span>
-                  )}
-                </div>
-              );
-            })}
+          
+          <div style={{ width: '100%', height: 160 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }} barSize={12}>
+                <XAxis 
+                  dataKey="hour" 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                  tickFormatter={(val) => {
+                    const h = parseInt(val);
+                    return h % 4 === 0 ? `${h}h` : '';
+                  }}
+                />
+                <YAxis 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} 
+                />
+                <Tooltip
+                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const successCount = payload[0].value;
+                      const failedCount = payload[1]?.value || 0;
+                      return (
+                        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '10px 14px', borderRadius: 8, fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', color: 'var(--text-primary)' }}>
+                          <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--accent-primary)' }}>{payload[0].payload.hour}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                            <span style={{ display: 'inline-block', width: 8, height: 8, background: '#10B981', borderRadius: '50%' }} />
+                            <span>Success: <strong>{successCount}</strong></span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ display: 'inline-block', width: 8, height: 8, background: '#EF4444', borderRadius: '50%' }} />
+                            <span>Failed: <strong>{failedCount}</strong></span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="success" stackId="a" fill="#10B981" radius={[0, 0, 2, 2]} />
+                <Bar dataKey="failed" stackId="a" fill="#EF4444" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
+
           <div style={{ display: 'flex', gap: 16, marginTop: 14, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--accent-primary)', borderRadius: 3 }} />Successful commands</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--danger)', borderRadius: 3 }} />Failed commands</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ display: 'inline-block', width: 10, height: 10, background: '#10B981', borderRadius: 3 }} />Successful commands</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ display: 'inline-block', width: 10, height: 10, background: '#EF4444', borderRadius: 3 }} />Failed commands</span>
           </div>
         </motion.div>
 
