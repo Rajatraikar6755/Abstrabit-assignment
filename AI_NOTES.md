@@ -1,6 +1,6 @@
 # AI Collaboration & Engineering Notes
 
-Hey! Here is an honest, human look at how we built **CommandPulse**, the division of work between myself and the AI assistant, the key design choices we made, and the actual engineering bugs we fought.
+**CommandPulse**, the division of work between myself and the AI assistant, the key design choices we made, and the actual engineering bugs we fought.
 
 ---
 
