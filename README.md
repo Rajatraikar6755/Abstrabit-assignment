@@ -6,7 +6,8 @@ CommandPulse is a production-grade, AI-powered Discord slash command bot integra
 
 *   **Security First**: Ed25519 signature verification on every Discord payload with timestamp freshness validation.
 *   **Idempotency & Rate Limiting**: Redis deduplication ensures no double-processing; sliding-window rate limiting prevents abuse.
-*   **AI Triage**: Report submissions processed via Groq API (Llama 3.3 70b) for summary, tags, priority classification, and recommended next steps.
+*   **AI Triage**: Report and suggestion submissions processed via Groq API (Llama 3.3 70b) for summary, tags, priority classification, and recommended next steps.
+*   **Interactive Commands**: Support for `/report` (optional text param or interactive modal form), `/suggest` (submit ideas/feedback), `/check-report` (live status lookups), `/status` (bot diagnostic check), and `/help` (rich formatting instructions guide).
 *   **Rule Engine**: Configure match conditions (contains, regex, length constraints) and action effects (custom tags, custom priorities, auto-replies) inside the dashboard.
 *   **Reliable Delivery**: Episodic downstream failures (webhook errors, DB down) trigger automatic QStash queues with exponential retry/backoff.
 *   **Modern Dashboard**: Built using Next.js 15, TanStack Query (short-polling for serverless real-time feel), TailwindCSS, and framer-motion.
@@ -52,7 +53,7 @@ Fill in the configuration fields:
 
 ### 3. Run Command Registration
 ```bash
-# Register slash commands (/report, /status) globally with Discord
+# Register slash commands (/report, /status, /suggest, /check-report, /help) globally with Discord
 npx tsx scripts/register-commands.ts
 ```
 
