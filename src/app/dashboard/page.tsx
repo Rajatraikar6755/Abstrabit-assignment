@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Activity, CheckCircle2, XCircle, Clock, TrendingUp, BarChart3, Users, Zap, ShieldAlert } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 interface Stats {
   totalAll: number;
@@ -123,22 +123,24 @@ export default function DashboardPage() {
             <h3 style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>Today&apos;s Activity Curve</h3>
           </div>
           
-          <div style={{ width: '100%', height: 160 }}>
+          <div style={{ width: '100%', height: 280, marginTop: 12 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }} barSize={10}>
+              <BarChart data={chartData} margin={{ top: 10, right: 5, left: -20, bottom: 0 }} barSize={24}>
                 <defs>
-                  <filter id="glow-success" x="-30%" y="-30%" width="160%" height="160%">
-                    <feDropShadow dx={0} dy={0} stdDeviation={4} floodColor="#00FFAD" floodOpacity={0.6} />
+                  <filter id="glow-success" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx={0} dy={0} stdDeviation={6} floodColor="#00FFAD" floodOpacity={0.8} />
                   </filter>
-                  <filter id="glow-failed" x="-30%" y="-30%" width="160%" height="160%">
-                    <feDropShadow dx={0} dy={0} stdDeviation={4} floodColor="#FF1A1A" floodOpacity={0.6} />
+                  <filter id="glow-failed" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx={0} dy={0} stdDeviation={6} floodColor="#FF1A1A" floodOpacity={0.8} />
                   </filter>
                 </defs>
+                <CartesianGrid vertical={false} stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="hour" 
                   tickLine={false} 
                   axisLine={false} 
-                  tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 500 }}
+                  tickMargin={8}
                   tickFormatter={(val) => {
                     const h = parseInt(val);
                     return h % 4 === 0 ? `${h}h` : '';
@@ -147,7 +149,8 @@ export default function DashboardPage() {
                 <YAxis 
                   tickLine={false} 
                   axisLine={false} 
-                  tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} 
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 500 }} 
+                  tickMargin={8}
                 />
                 <Tooltip
                   cursor={{ fill: 'rgba(255,255,255,0.02)' }}
@@ -156,14 +159,14 @@ export default function DashboardPage() {
                       const successCount = payload[0].value;
                       const failedCount = payload[1]?.value || 0;
                       return (
-                        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '10px 14px', borderRadius: 8, fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', color: 'var(--text-primary)' }}>
-                          <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--accent-primary)' }}>{payload[0].payload.hour}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, background: '#00FFAD', borderRadius: '50%', boxShadow: '0 0 6px #00FFAD' }} />
+                        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '12px 16px', borderRadius: 8, fontSize: 13, boxShadow: '0 8px 24px rgba(0,0,0,0.6)', color: 'var(--text-primary)' }}>
+                          <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--accent-primary)', fontSize: 14 }}>{payload[0].payload.hour}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <span style={{ display: 'inline-block', width: 10, height: 10, background: '#00FFAD', borderRadius: '50%', boxShadow: '0 0 8px #00FFAD' }} />
                             <span>Success: <strong>{successCount}</strong></span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, background: '#FF1A1A', borderRadius: '50%', boxShadow: '0 0 6px #FF1A1A' }} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ display: 'inline-block', width: 10, height: 10, background: '#FF1A1A', borderRadius: '50%', boxShadow: '0 0 8px #FF1A1A' }} />
                             <span>Failed: <strong>{failedCount}</strong></span>
                           </div>
                         </div>
@@ -172,8 +175,8 @@ export default function DashboardPage() {
                     return null;
                   }}
                 />
-                <Bar dataKey="success" stackId="a" fill="#00FFAD" radius={[5, 5, 5, 5]} filter="url(#glow-success)" />
-                <Bar dataKey="failed" stackId="a" fill="#FF1A1A" radius={[5, 5, 5, 5]} filter="url(#glow-failed)" />
+                <Bar dataKey="success" stackId="a" fill="#00FFAD" radius={[6, 6, 6, 6]} filter="url(#glow-success)" />
+                <Bar dataKey="failed" stackId="a" fill="#FF1A1A" radius={[6, 6, 6, 6]} filter="url(#glow-failed)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
